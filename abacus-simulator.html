@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Soroban — Japanese Abacus</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wood-dark: #3d1f0a;
+    --wood-mid: #6b3a1f;
+    --wood-light: #c4813a;
+    --wood-pale: #e8c48a;
+    --wood-grain: #d4a96a;
+    --bead-heaven: #1a1a2e;
+    --bead-heaven-shine: #4a4a7e;
+    --bead-earth: #8b1a1a;
+    --bead-earth-shine: #c44444;
+    --bead-active: #d4af37;
+    --bead-active-shine: #f5d76e;
+    --divider: #2a0f00;
+    --rod: #8b6914;
+    --bg: #1a1008;
+    --text: #e8c48a;
+    --text-dim: #8b6914;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–bg);
+min-height: 100vh;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+font-family: ‘Noto Serif JP’, serif;
+overflow-x: hidden;
+background-image:
+radial-gradient(ellipse at 20% 50%, rgba(107,58,31,0.15) 0%, transparent 60%),
+radial-gradient(ellipse at 80% 50%, rgba(61,31,10,0.2) 0%, transparent 60%);
+}
+
+h1 {
+color: var(–wood-pale);
+font-size: 1.1rem;
+font-weight: 300;
+letter-spacing: 0.4em;
+text-transform: uppercase;
+margin-bottom: 0.3rem;
+opacity: 0.8;
+}
+
+.subtitle {
+color: var(–text-dim);
+font-family: ‘DM Mono’, monospace;
+font-size: 0.7rem;
+letter-spacing: 0.2em;
+margin-bottom: 2.5rem;
+}
+
+/* ── Frame ── */
+.frame {
+background: linear-gradient(160deg, var(–wood-mid) 0%, var(–wood-dark) 40%, var(–wood-mid) 100%);
+border-radius: 12px;
+padding: 22px 28px 28px;
+box-shadow:
+0 30px 80px rgba(0,0,0,0.7),
+0 0 0 1px rgba(196,129,58,0.3),
+inset 0 1px 0 rgba(228,196,138,0.2),
+inset 0 -2px 4px rgba(0,0,0,0.4);
+position: relative;
+}
+
+.frame::before {
+content: ‘’;
+position: absolute;
+inset: 4px;
+border-radius: 9px;
+border: 1px solid rgba(196,129,58,0.15);
+pointer-events: none;
+}
+
+/* ── Display ── */
+.display {
+text-align: center;
+margin-bottom: 18px;
+}
+
+.display-value {
+font-family: ‘DM Mono’, monospace;
+font-size: 2.8rem;
+font-weight: 400;
+color: var(–wood-pale);
+letter-spacing: 0.15em;
+text-shadow: 0 0 20px rgba(212,175,55,0.4), 0 2px 4px rgba(0,0,0,0.5);
+transition: all 0.2s ease;
+min-width: 200px;
+display: inline-block;
+}
+
+.display-label {
+font-size: 0.6rem;
+letter-spacing: 0.3em;
+color: var(–text-dim);
+text-transform: uppercase;
+margin-top: 2px;
+}
+
+/* ── Abacus body ── */
+.abacus-body {
+background: linear-gradient(180deg, #2a1205 0%, #1a0a02 100%);
+border-radius: 6px;
+padding: 0;
+position: relative;
+border: 2px solid var(–wood-dark);
+box-shadow: inset 0 2px 8px rgba(0,0,0,0.6);
+overflow: hidden;
+}
+
+/* ── Divider bar ── */
+.divider-bar {
+position: absolute;
+left: 0; right: 0;
+height: 14px;
+background: linear-gradient(180deg, var(–wood-light) 0%, var(–wood-grain) 50%, var(–wood-light) 100%);
+top: calc(var(–heaven-height) + 0px);
+z-index: 10;
+box-shadow: 0 2px 6px rgba(0,0,0,0.5), 0 -1px 3px rgba(0,0,0,0.3);
+}
+
+.divider-bar::before {
+content: ‘’;
+position: absolute;
+top: 2px; left: 0; right: 0;
+height: 1px;
+background: rgba(255,255,255,0.15);
+}
+
+/* ── Columns ── */
+.columns {
+display: flex;
+gap: 0;
+position: relative;
+}
+
+.column {
+display: flex;
+flex-direction: column;
+align-items: center;
+position: relative;
+width: 52px;
+cursor: pointer;
+}
+
+.column:not(:last-child)::after {
+content: ‘’;
+position: absolute;
+top: 0; bottom: 0;
+right: 0;
+width: 1px;
+background: rgba(107,58,31,0.3);
+}
+
+/* ── Rod ── */
+.rod {
+position: absolute;
+width: 4px;
+left: 50%;
+transform: translateX(-50%);
+top: 0;
+bottom: 0;
+background: linear-gradient(90deg, #5a4010, var(–rod), #f0c040, var(–rod), #5a4010);
+border-radius: 2px;
+z-index: 1;
+box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+/* ── Heaven section ── */
+.heaven-section {
+height: 80px;
+width: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+position: relative;
+padding: 8px 0;
+}
+
+/* ── Earth section ── */
+.earth-section {
+height: 200px;
+width: 100%;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: flex-start;
+position: relative;
+padding: 8px 0;
+gap: 6px;
+}
+
+/* ── Bead ── */
+.bead {
+width: 36px;
+height: 22px;
+border-radius: 50%;
+position: relative;
+z-index: 2;
+cursor: pointer;
+transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+filter 0.15s ease;
+flex-shrink: 0;
+}
+
+.bead:hover {
+filter: brightness(1.2);
+}
+
+.bead:active {
+transform: scale(0.95) !important;
+}
+
+/* Heaven bead */
+.bead-heaven {
+background: radial-gradient(ellipse at 35% 30%, var(–bead-heaven-shine), var(–bead-heaven) 70%);
+box-shadow:
+0 3px 6px rgba(0,0,0,0.5),
+0 1px 0 rgba(255,255,255,0.1) inset,
+0 -1px 0 rgba(0,0,0,0.3) inset;
+}
+
+.bead-heaven.active {
+background: radial-gradient(ellipse at 35% 30%, var(–bead-active-shine), var(–bead-active) 70%);
+box-shadow:
+0 3px 6px rgba(212,175,55,0.4),
+0 0 12px rgba(212,175,55,0.3),
+0 1px 0 rgba(255,255,255,0.3) inset;
+}
+
+/* Earth bead */
+.bead-earth {
+background: radial-gradient(ellipse at 35% 30%, var(–bead-earth-shine), var(–bead-earth) 70%);
+box-shadow:
+0 3px 6px rgba(0,0,0,0.5),
+0 1px 0 rgba(255,255,255,0.1) inset,
+0 -1px 0 rgba(0,0,0,0.3) inset;
+}
+
+.bead-earth.active {
+background: radial-gradient(ellipse at 35% 30%, var(–bead-active-shine), var(–bead-active) 70%);
+box-shadow:
+0 3px 6px rgba(212,175,55,0.4),
+0 0 12px rgba(212,175,55,0.3),
+0 1px 0 rgba(255,255,255,0.3) inset;
+}
+
+/* Heaven bead positions */
+.heaven-section .bead {
+position: absolute;
+transition: top 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+filter 0.15s ease,
+background 0.2s ease,
+box-shadow 0.2s ease;
+}
+
+/* Earth beads container */
+.earth-beads {
+position: absolute;
+top: 0; bottom: 0; left: 0; right: 0;
+}
+
+.earth-beads .bead {
+position: absolute;
+left: 50%;
+transform: translateX(-50%);
+transition: top 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+filter 0.15s ease,
+background 0.2s ease,
+box-shadow 0.2s ease;
+}
+
+/* ── Column label ── */
+.col-label {
+font-family: ‘DM Mono’, monospace;
+font-size: 0.55rem;
+color: var(–text-dim);
+letter-spacing: 0.1em;
+margin-top: 8px;
+margin-bottom: 0;
+opacity: 0.7;
+}
+
+/* ── Controls ── */
+.controls {
+display: flex;
+gap: 12px;
+margin-top: 20px;
+justify-content: center;
+}
+
+.btn {
+font-family: ‘Noto Serif JP’, serif;
+font-size: 0.7rem;
+letter-spacing: 0.2em;
+padding: 8px 20px;
+border: 1px solid rgba(196,129,58,0.4);
+background: rgba(107,58,31,0.3);
+color: var(–wood-pale);
+border-radius: 4px;
+cursor: pointer;
+transition: all 0.2s ease;
+text-transform: uppercase;
+}
+
+.btn:hover {
+background: rgba(196,129,58,0.3);
+border-color: rgba(196,129,58,0.7);
+color: #fff;
+box-shadow: 0 0 12px rgba(196,129,58,0.2);
+}
+
+.btn:active {
+transform: scale(0.97);
+}
+
+/* ── Legend ── */
+.legend {
+display: flex;
+gap: 16px;
+margin-top: 16px;
+justify-content: center;
+}
+
+.legend-item {
+display: flex;
+align-items: center;
+gap: 6px;
+font-size: 0.6rem;
+color: var(–text-dim);
+letter-spacing: 0.1em;
+}
+
+.legend-dot {
+width: 10px;
+height: 7px;
+border-radius: 50%;
+}
+
+.legend-dot.heaven { background: var(–bead-active); }
+.legend-dot.earth { background: var(–bead-earth-shine); }
+
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.6; }
+}
+
+.display-value.changed {
+animation: none;
+text-shadow: 0 0 30px rgba(212,175,55,0.8), 0 2px 4px rgba(0,0,0,0.5);
+}
+</style>
+
+</head>
+<body>
+
+<h1>算盤 · Soroban</h1>
+<div class="subtitle">Japanese Abacus Simulator</div>
+
+<div class="frame">
+  <div class="display">
+    <div class="display-value" id="displayValue">0</div>
+    <div class="display-label">Current Value</div>
+  </div>
+
+  <div class="abacus-body" id="abacusBody">
+    <div class="divider-bar" id="dividerBar"></div>
+    <div class="columns" id="columns"></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" onclick="resetAll()">Clear · 清零</button>
+    <button class="btn" onclick="randomDemo()">Demo · 示例</button>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot heaven"></div>
+      <span>Heaven bead = 5</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot earth"></div>
+      <span>Earth bead = 1</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const NUM_COLS = 7;
+
+  // State: heavenActive[col] = bool, earthActive[col] = 0-4
+  const state = {
+    heaven: Array(NUM_COLS).fill(false),
+    earth: Array(NUM_COLS).fill(0)
+  };
+
+  const HEAVEN_H = 80;
+  const BEAD_H = 22;
+  const DIVIDER_H = 14;
+
+  function buildAbacus() {
+    const columnsEl = document.getElementById('columns');
+    const divider = document.getElementById('dividerBar');
+    divider.style.top = HEAVEN_H + 'px';
+
+    columnsEl.innerHTML = '';
+
+    const colValues = [1000000, 100000, 10000, 1000, 100, 10, 1];
+    const colLabels = ['1M', '100K', '10K', '1K', '100', '10', '1'];
+
+    for (let c = 0; c < NUM_COLS; c++) {
+      const col = document.createElement('div');
+      col.className = 'column';
+
+      // Rod
+      const rod = document.createElement('div');
+      rod.className = 'rod';
+      rod.style.top = '0';
+      rod.style.height = (HEAVEN_H + DIVIDER_H + 200) + 'px';
+      col.appendChild(rod);
+
+      // Heaven section
+      const heaven = document.createElement('div');
+      heaven.className = 'heaven-section';
+
+      const hBead = document.createElement('div');
+      hBead.className = 'bead bead-heaven';
+      hBead.id = `h-${c}`;
+      hBead.style.left = '50%';
+      hBead.style.transform = 'translateX(-50%)';
+      setHeavenBeadPos(hBead, false); // start at top (inactive)
+      hBead.addEventListener('click', () => toggleHeaven(c));
+      heaven.appendChild(hBead);
+      col.appendChild(heaven);
+
+      // Spacer for divider
+      const spacer = document.createElement('div');
+      spacer.style.height = DIVIDER_H + 'px';
+      spacer.style.flexShrink = '0';
+      col.appendChild(spacer);
+
+      // Earth section
+      const earth = document.createElement('div');
+      earth.className = 'earth-section';
+      earth.style.position = 'relative';
+      earth.style.height = '200px';
+
+      const earthBeads = document.createElement('div');
+      earthBeads.className = 'earth-beads';
+      earthBeads.id = `earth-${c}`;
+
+      for (let b = 0; b < 4; b++) {
+        const eBead = document.createElement('div');
+        eBead.className = 'bead bead-earth';
+        eBead.id = `e-${c}-${b}`;
+        setEarthBeadPos(eBead, b, 0); // all inactive
+        eBead.addEventListener('click', () => clickEarth(c, b));
+        earthBeads.appendChild(eBead);
+      }
+
+      earth.appendChild(earthBeads);
+      col.appendChild(earth);
+
+      // Label
+      const label = document.createElement('div');
+      label.className = 'col-label';
+      label.textContent = colLabels[c];
+      col.appendChild(label);
+
+      columnsEl.appendChild(col);
+    }
+  }
+
+  // Heaven bead: inactive = near top, active = near divider
+  function setHeavenBeadPos(el, active) {
+    if (active) {
+      el.style.top = (HEAVEN_H - BEAD_H - 4) + 'px';
+    } else {
+      el.style.top = '6px';
+    }
+  }
+
+  // Earth beads: 4 beads, index 0=top, 3=bottom
+  // inactive: spread toward bottom, active: pushed toward divider (top of earth)
+  function setEarthBeadPos(el, beadIdx, activeCount) {
+    const earthH = 200;
+    const gap = 6;
+    const beadStep = BEAD_H + gap;
+
+    // beads 0..3 from top to bottom
+    // active beads pile up at top (near divider), inactive pile at bottom
+    let topPos;
+    if (beadIdx < activeCount) {
+      // active: near top
+      topPos = 8 + beadIdx * beadStep;
+    } else {
+      // inactive: near bottom
+      const inactiveIdx = beadIdx - activeCount; // 0 = closest to active group
+      topPos = earthH - BEAD_H - 8 - (3 - beadIdx) * beadStep;
+    }
+    el.style.top = topPos + 'px';
+  }
+
+  function toggleHeaven(col) {
+    state.heaven[col] = !state.heaven[col];
+    const el = document.getElementById(`h-${col}`);
+    el.classList.toggle('active', state.heaven[col]);
+    setHeavenBeadPos(el, state.heaven[col]);
+    updateDisplay();
+    flashDisplay();
+  }
+
+  function clickEarth(col, beadIdx) {
+    // Clicking bead at index b:
+    // If b < activeCount → deactivate beads from b upward (reduce count to b)
+    // If b >= activeCount → activate beads up to and including b (set count to b+1)
+    const cur = state.earth[col];
+    let next;
+    if (beadIdx < cur) {
+      next = beadIdx; // deactivate this and above
+    } else {
+      next = beadIdx + 1; // activate up to this
+    }
+    state.earth[col] = next;
+    renderEarthCol(col);
+    updateDisplay();
+    flashDisplay();
+  }
+
+  function renderEarthCol(col) {
+    const activeCount = state.earth[col];
+    for (let b = 0; b < 4; b++) {
+      const el = document.getElementById(`e-${col}-${b}`);
+      const isActive = b < activeCount;
+      el.classList.toggle('active', isActive);
+      setEarthBeadPos(el, b, activeCount);
+    }
+  }
+
+  function getValue() {
+    let total = 0;
+    const placeValues = [1000000, 100000, 10000, 1000, 100, 10, 1];
+    for (let c = 0; c < NUM_COLS; c++) {
+      const pv = placeValues[c];
+      if (state.heaven[c]) total += 5 * pv;
+      total += state.earth[c] * pv;
+    }
+    return total;
+  }
+
+  function updateDisplay() {
+    const val = getValue();
+    document.getElementById('displayValue').textContent = val.toLocaleString();
+  }
+
+  function flashDisplay() {
+    const el = document.getElementById('displayValue');
+    el.classList.remove('changed');
+    void el.offsetWidth;
+    el.classList.add('changed');
+    setTimeout(() => el.classList.remove('changed'), 300);
+  }
+
+  function resetAll() {
+    for (let c = 0; c < NUM_COLS; c++) {
+      state.heaven[c] = false;
+      state.earth[c] = 0;
+      const hEl = document.getElementById(`h-${c}`);
+      hEl.classList.remove('active');
+      setHeavenBeadPos(hEl, false);
+      renderEarthCol(c);
+    }
+    updateDisplay();
+  }
+
+  function randomDemo() {
+    resetAll();
+    const target = Math.floor(Math.random() * 9999999);
+    let remaining = target;
+    const placeValues = [1000000, 100000, 10000, 1000, 100, 10, 1];
+
+    for (let c = 0; c < NUM_COLS; c++) {
+      const pv = placeValues[c];
+      const digit = Math.floor(remaining / pv);
+      remaining %= pv;
+
+      const heavenVal = digit >= 5 ? 1 : 0;
+      const earthVal = digit - heavenVal * 5;
+
+      state.heaven[c] = heavenVal === 1;
+      state.earth[c] = earthVal;
+
+      const hEl = document.getElementById(`h-${c}`);
+      hEl.classList.toggle('active', state.heaven[c]);
+      setHeavenBeadPos(hEl, state.heaven[c]);
+      renderEarthCol(c);
+    }
+    updateDisplay();
+    flashDisplay();
+  }
+
+  buildAbacus();
+  updateDisplay();
+</script>
+
+</body>
+</html>
